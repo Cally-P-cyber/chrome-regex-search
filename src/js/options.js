@@ -8,6 +8,7 @@ var WHITE_COLOR = '#ffffff';
 var ERROR_COLOR = '#ff8989';
 var GOOD_COLOR = '#89ff89';
 var DEFAULT_INSTANT_RESULTS = true;
+var DEFAULT_THEME = 'system';
 /*** CONSTANTS ***/
 
 /*** FUNCTIONS ***/
@@ -45,47 +46,89 @@ function validateMaxResults() {
   return false;
 }
 
+/* Save theme preference */
+function saveThemePreference() {
+  const themeSelect = document.getElementById('theme-select');
+  const theme = themeSelect.value;
+  chrome.storage.local.set({ theme: theme }, function() {
+    // Update the theme in the popup as well
+    chrome.runtime.sendMessage({ action: 'updateTheme', theme: theme });
+    markStatus('Theme preference saved.', 1500);
+  });
+}
+
+/* Apply theme to options page */
+function applyTheme(theme) {
+  const body = document.body;
+  // Remove all theme classes
+  body.classList.remove('light-theme', 'dark-theme');
+  
+  if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    body.classList.add('dark-theme');
+  } else {
+    body.classList.add('light-theme');
+  }
+}
+
 /* Save options to storage */
-function saveOptions() {
-  var maxResults = validateMaxResults();
+async function saveOptions() {
+  // Save theme preference
+  saveThemePreference();
+  
+  const maxResults = validateMaxResults();
   if (maxResults) {
-    var options = {
-      'highlightColor' : document.getElementById('highlightColor').value,
-      'selectedColor' : document.getElementById('selectedColor').value,
-      'textColor' : document.getElementById('textColor').value,
-      'maxResults' : maxResults,
-      'instantResults' :  document.getElementById('instantResults').checked,
-      'maxHistoryLength' : document.getElementById('maxHistoryLength').value
-    }
-    
-    chrome.storage.local.set(options, function() {
-      markStatus('New settings saved');
-    });
+    const options = {
+      highlightColor: document.getElementById('highlightColor').value,
+      selectedColor: document.getElementById('selectedColor').value,
+      textColor: document.getElementById('textColor').value,
+      maxResults: maxResults,
+      instantResults: document.getElementById('instantResults').checked,
+      maxHistoryLength: document.getElementById('maxHistoryLength').value
+    };
+    await chrome.storage.local.set(options);
+    markStatus('New settings saved');
   }
 }
 
 /* Load options from storage */
 function loadOptions() {
+  // Load theme preference
   chrome.storage.local.get({
-    'highlightColor' : DEFAULT_HIGHLIGHT_COLOR,
-    'selectedColor' : DEFAULT_SELECTED_COLOR,
-    'textColor' : DEFAULT_TEXT_COLOR,
-    'maxResults' : DEFAULT_MAX_RESULTS,
-    'instantResults' : DEFAULT_INSTANT_RESULTS,
-    'maxHistoryLength' : DEFAULT_MAX_HISTORY_LENGTH }, 
-    function(result) {
-      document.getElementById('highlightColor').value = result.highlightColor;
-      document.getElementById('exampleHighlighted').style.backgroundColor = result.highlightColor;
-      document.getElementById('selectedColor').value = result.selectedColor;
-      document.getElementById('exampleSelected').style.backgroundColor = result.selectedColor;
-      document.getElementById('textColor').value = result.textColor;
-      document.getElementById('exampleHighlighted').style.color = result.textColor;
-      document.getElementById('exampleSelected').style.color = result.textColor;
-      document.getElementById('maxResults').value = result.maxResults;
-      document.getElementById('instantResults').checked = result.instantResults;
-      document.getElementById('maxHistoryLength').value = result.maxHistoryLength;
-    }
-  );
+    theme: DEFAULT_THEME,
+    maxResults: DEFAULT_MAX_RESULTS,
+    highlightColor: DEFAULT_HIGHLIGHT_COLOR,
+    selectedColor: DEFAULT_SELECTED_COLOR,
+    textColor: DEFAULT_TEXT_COLOR,
+    maxHistoryLength: DEFAULT_MAX_HISTORY_LENGTH,
+    instantResults: DEFAULT_INSTANT_RESULTS
+  }, function(items) {
+    // Set theme
+    const themeSelect = document.getElementById('theme-select');
+    themeSelect.value = items.theme || DEFAULT_THEME;
+    applyTheme(items.theme);
+    
+    // Set other options
+    document.getElementById('maxResults').value = items.maxResults;
+    document.getElementById('highlightColor').value = items.highlightColor;
+    document.getElementById('selectedColor').value = items.selectedColor;
+    document.getElementById('textColor').value = items.textColor;
+    document.getElementById('maxHistoryLength').value = items.maxHistoryLength;
+    document.getElementById('instantResults').checked = items.instantResults;
+    
+    document.getElementById('exampleHighlighted').style.backgroundColor = items.highlightColor;
+    document.getElementById('exampleSelected').style.backgroundColor = items.selectedColor;
+    document.getElementById('exampleHighlighted').style.color = items.textColor;
+    document.getElementById('exampleSelected').style.color = items.textColor;
+  });
+  
+  // Listen for system theme changes
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    chrome.storage.local.get(['theme'], function(result) {
+      if (result.theme === 'system') {
+        applyTheme('system');
+      }
+    });
+  });
 }
 
 /* Restore default configuration */
@@ -99,6 +142,9 @@ function restoreDefaults() {
 
 /*** LISTENERS ***/
 document.addEventListener('DOMContentLoaded', function() {
+  // Add theme change listener
+  document.getElementById('theme-select').addEventListener('change', saveThemePreference);
+  
   loadOptions();
 
   document.getElementById('highlightColor').addEventListener('change', function() {

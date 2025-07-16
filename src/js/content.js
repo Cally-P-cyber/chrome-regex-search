@@ -40,13 +40,13 @@ function initSearchInfo(pattern) {
 }
 
 /* Send message with search information for this tab */
-function returnSearchInfo(cause) {
-  chrome.runtime.sendMessage({
-    'message' : 'returnSearchInfo',
-    'regexString' : searchInfo.regexString,
-    'currentSelection' : searchInfo.selectedIndex,
-    'numResults' : searchInfo.length,
-    'cause' : cause
+async function returnSearchInfo(cause) {
+  await chrome.runtime.sendMessage({
+    message: 'returnSearchInfo',
+    regexString: searchInfo.regexString,
+    currentSelection: searchInfo.selectedIndex,
+    numResults: searchInfo.length,
+    cause: cause
   });
 }
 
@@ -217,10 +217,33 @@ function search(regexString, configurationChanged) {
 /*** FUNCTIONS ***/
 
 /*** LISTENERS ***/
-/* Received search message, find regex matches */
+// Notify service worker that content script is ready
+chrome.runtime.sendMessage({ message: 'contentScriptReady' });
+
+// Set up message listener
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  if ('search' == request.message) {
-    search(request.regexString, request.configurationChanged);
+  // Handle ping message
+  if (request.message === 'ping') {
+    sendResponse({ status: 'pong' });
+    return true; // Keep the message channel open for async response
+  }
+  
+  // Handle clear highlight message
+  if (request.message === 'clearHighlight') {
+    removeHighlight();
+    sendResponse({ status: 'success' });
+    return true;
+  }
+  // Handle search message
+  if (request.message === 'search') {
+    try {
+      search(request.regexString, request.configurationChanged);
+      sendResponse({ status: 'success' });
+    } catch (error) {
+      console.error('Search error:', error);
+      sendResponse({ status: 'error', message: error.message });
+    }
+    return true; // Keep the message channel open for async response
   }
   /* Received selectNextNode message, select next regex match */
   else if ('selectNextNode' == request.message) {

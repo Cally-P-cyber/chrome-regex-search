@@ -30,20 +30,25 @@
   },
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
   ],
   "background": {
-    "service_worker": "service_worker.js",
+    "service_worker": "js/service_worker.js", 
     "type": "module"
   },
   "content_scripts": [
     {
-      "matches": [ "http://*/*", "https://*/*", "file://*/*" ],
-      "js": [ "js/content.js" ]
+      "matches": ["<all_urls>"],
+      "js": ["js/content.js"],
+      "run_at": "document_idle"
     }
   ],
   "commands": {
-    "_execute_browser_action": {
+    "_execute_action": {
       "suggested_key": {
         "windows": "Ctrl+Shift+F",
         "mac": "Command+Shift+F",
