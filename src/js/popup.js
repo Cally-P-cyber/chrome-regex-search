@@ -223,9 +223,9 @@ function setHistoryVisibility(makeVisible) {
   document.getElementById('history').style.display = makeVisible ? 'block' : 'none';
   document.getElementById('show-history').title = makeVisible ? HIDE_HISTORY_TITLE : SHOW_HISTORY_TITLE;
   if(makeVisible) {
-    document.getElementById('show-history').className = 'selected';
+    document.getElementById('show-history').className = 'find-button selected';
   } else {
-    document.getElementById('show-history').className = '';
+    document.getElementById('show-history').className = 'find-button';
   }
 }
 
@@ -234,20 +234,19 @@ function setCaseInsensitiveElement() {
   function (result) {
     document.getElementById('insensitive').title = result.caseInsensitive ? DISABLE_CASE_INSENSITIVE_TITLE : ENABLE_CASE_INSENSITIVE_TITLE;
     if(result.caseInsensitive) {
-      document.getElementById('insensitive').className = 'selected';
+      document.getElementById('insensitive').className = 'find-button selected';
     } else {
-      document.getElementById('insensitive').className = '';
+      document.getElementById('insensitive').className = 'find-button';
     }
   });
-
 }
 function toggleCaseInsensitive() {
-  var caseInsensitive = document.getElementById('insensitive').className == 'selected';
+  var caseInsensitive = document.getElementById('insensitive').className == 'find-button selected';
   document.getElementById('insensitive').title = caseInsensitive ? ENABLE_CASE_INSENSITIVE_TITLE : DISABLE_CASE_INSENSITIVE_TITLE;
   if(caseInsensitive) {
-    document.getElementById('insensitive').className = '';
+    document.getElementById('insensitive').className = 'find-button';
   } else {
-    document.getElementById('insensitive').className = 'selected';
+    document.getElementById('insensitive').className = 'find-button selected';
   }
   sentInput = false;
   chrome.storage.local.set({caseInsensitive: !caseInsensitive});
