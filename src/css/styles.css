@@ -115,15 +115,32 @@ body {
   display: none;
 }
 
+.history-items-container {
+  display: flex;
+  align-items: center;
+  max-height: fit-content;
+  padding: 3px;
+}
+
 .historyLink {
-  display: block;
+  display: inline-block;
+  min-width: 5%;
+  width: auto;
   padding: 5px;
   color: var(--text-primary);
   text-decoration: none;
   border-radius: 3px;
   border: 1px solid var(--border-light);
-  overflow: hidden;
-  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.historyDeleteEntry{
+  display: inline-block;
+  text-align: center  !important;
+  max-width: 20%;
+  width: auto;
+  padding-right: 8px;
+  cursor: pointer;
 }
 
 .historyLink:hover {

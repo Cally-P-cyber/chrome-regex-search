@@ -56,7 +56,6 @@ function showError(message) {
   error.style.color = ERROR_COLOR;
   document.getElementById('numResults').textContent = '';
 }
-
 /* Send input to content script of tab to search for regex */
 const passInputToContentScript = async (configurationChanged) => {
   const input = document.getElementById('inputRegex');
@@ -149,10 +148,10 @@ const selectPrev = async () => {
 // Using the async/await version of passInputToContentScript defined above
 
 function createHistoryLineElement(text) {
-  var deleteEntrySpan = document.createElement('span');
-  deleteEntrySpan.className = 'historyDeleteEntry'
-  deleteEntrySpan.textContent = '\u2715';
-  deleteEntrySpan.addEventListener('click', function() {
+  var deleteEntryDiv = document.createElement('div');
+  deleteEntryDiv.className = 'historyDeleteEntry'
+  deleteEntryDiv.textContent = '\u2715';
+  deleteEntryDiv.addEventListener('click', function() {
     for (var i = searchHistory.length - 1; i >= 0; i--) {
       if (searchHistory[i] == text) {
         searchHistory.splice(i, 1);
@@ -161,10 +160,10 @@ function createHistoryLineElement(text) {
     chrome.storage.local.set({searchHistory: searchHistory});
     updateHistoryDiv();
   });
-  var linkSpan = document.createElement('span');
-  linkSpan.className = 'historyLink'
-  linkSpan.textContent = text;
-  linkSpan.addEventListener('click', function() {
+  var linkdiv = document.createElement('div');
+  linkdiv.className = 'historyLink';
+  linkdiv.textContent = text;
+  linkdiv.addEventListener('click', function() {
     if (document.getElementById('inputRegex').value !== text) {
       document.getElementById('inputRegex').value = text;
       passInputToContentScript();
@@ -172,8 +171,9 @@ function createHistoryLineElement(text) {
     }
   });
   var lineDiv = document.createElement('div');
-  lineDiv.appendChild(deleteEntrySpan);
-  lineDiv.appendChild(linkSpan);
+  lineDiv.className= 'history-items-container';
+  lineDiv.appendChild(deleteEntryDiv);
+  lineDiv.appendChild(linkdiv);
   return lineDiv;
 }
 
@@ -182,10 +182,10 @@ function updateHistoryDiv() {
   if (historyDiv) {
     historyDiv.innerHTML = '';
     if (searchHistory.length == 0) {
-      var span = document.createElement('span');
-      span.className = 'historyIsEmptyMessage';
-      span.textContent = HISTORY_IS_EMPTY_TEXT;
-      historyDiv.appendChild(span);
+      var div = document.createElement('div');
+      div.className = 'historyIsEmptyMessage';
+      div.textContent = HISTORY_IS_EMPTY_TEXT;
+      historyDiv.appendChild(div);
     } else {
       for (var i = searchHistory.length - 1; i >= 0; i--) {
         historyDiv.appendChild(createHistoryLineElement(searchHistory[i]));
