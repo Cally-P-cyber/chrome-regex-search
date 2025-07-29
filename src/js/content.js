@@ -275,9 +275,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       }).join('\n');
       clipboardHelper.appendChild(document.createTextNode(text));
       document.body.appendChild(clipboardHelper);
-      clipboardHelper.select();
-      document.execCommand('copy');
-
+      navigator.clipboard.readText().then(()=>clipboardHelper)
     } finally {
       document.body.removeChild(clipboardHelper);
     }
