@@ -92,4 +92,4 @@ Now whenever, you want to open the popup simply enter your custom command.
 
 ## License
 
-Chrome Regex Search is under the MIT license. See the <a href="https://raw.githubusercontent.com/rogershen/chrome-regex-search/master/LICENSE">LICENSE</a> file for details.
+Chrome Regex Search is under the MIT license. See the <a href="https://github.com/Cally-P-cyber/chrome-regex-search/blob/master/LICENSE">LICENSE</a> file for details.
