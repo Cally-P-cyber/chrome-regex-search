@@ -393,6 +393,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 });
 
 document.getElementById('copy-to-clipboard').addEventListener('click', function() {
+  const copyToClipboardMessage = document.getElementById('clipboardNotification')
+  copyToClipboardMessage.style.display = "block"
+  setTimeout(()=> {
+    copyToClipboardMessage.style.display = "none"
+  },1500)
   chrome.tabs.query({
     'active': true,
     'currentWindow': true

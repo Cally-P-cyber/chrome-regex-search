@@ -271,12 +271,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     var clipboardHelper = document.createElement('textarea');
     try {
       var text = searchInfo.highlightedNodes.map(function (n) {
-        return n.innerText;
+        return n.trim().innerText;
       }).join('\n');
       clipboardHelper.appendChild(document.createTextNode(text));
       document.body.appendChild(clipboardHelper);
       clipboardHelper.select();
       document.execCommand('copy');
+
     } finally {
       document.body.removeChild(clipboardHelper);
     }
