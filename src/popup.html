@@ -1,46 +1,45 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <title>Chrome Regex Search</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="css/styles.css">
-  </head>
-  <body>
-    <div class="chrome-find-container">
-      <div class="find-input-container">
-        <input id="inputRegex" type="text" name="inputRegex" placeholder="Find in page" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" />
-        <div class="find-match-count" id="numResults"></div>
-      </div>
-      <div class="find-separator"></div>
-      <div class="find-buttons">
-        <button id="prev" class="find-button" type="button" title="Previous Match">
-          <i class="fa fa-chevron-up"></i>
-        </button>
-        <button id="next" class="find-button" type="button" title="Next Match">
-          <i class="fa fa-chevron-down"></i>
-        </button>
-        <button id="insensitive" class="find-button" type="button" title="Match case">
-          <i class="fa fa-font"></i>
-        </button>
-        <button id="copy-to-clipboard" class="find-button" type="button" title="Copy all matches">
-          <i class="fa fa-copy"></i>
-        </button>
-        <button id="clear" class="find-button" type="button" title="Clear search">
-          <i class="fa fa-times"></i>
-        </button>
-        <button id="show-history" class="find-button" type="button" title="Search history">
-          <i class="fa fa-history"></i>
-        </button>
-        <button id="toggle-darkmode" class="find-button" type="button" title="Toggle dark mode">
-          <i class="fa fa-moon dark-icon"></i>
-          <i class="fa fa-sun light-icon" style="display: none;"></i>
-        </button>
-      </div>
+<head>
+  <title>Chrome Regex Search</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="chrome-find-container">
+    <div class="input-container">
+      <input id="inputRegex" type="text" name="inputRegex" placeholder="Find in page" spellcheck="false"
+        autocomplete="off" autocorrect="off" autocapitalize="off" />
+      <div class="find-match-count" id="numResults"></div>
     </div>
-    <div id="history" class="history-container"></div>
-    <span id="error" class="error-chrome-regex"></span>
-    <script type="text/javascript" src="js/popup.js"></script>
-  </body>
+    <div class="find-buttons">
+      <button id="prev" class="find-button" type="button" title="Previous Match">
+        <i class="fa fa-chevron-up"></i>
+      </button>
+      <button id="next" class="find-button" type="button" title="Next Match">
+        <i class="fa fa-chevron-down"></i>
+      </button>
+      <button id="insensitive" class="find-button" type="button" title="Match case">
+        <i class="fa fa-font"></i>
+      </button>
+      <button id="copy-to-clipboard" class="find-button" type="button" title="Copy all matches">
+        <i class="fa fa-copy"></i>
+      </button>
+      <button id="clear" class="find-button" type="button" title="Clear search">
+        <i class="fa fa-times"></i>
+      </button>
+      <button id="show-history" class="find-button" type="button" title="Search history">
+        <i class="fa fa-solid fa-clock-rotate-left"></i>
+      </button>
+      <button id="toggle-darkmode" class="find-button" type="button" title="Toggle dark mode">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+    </div>
+  </div>
+  <div id="history" class="history-container"></div>
+  <span id="error" class="error-chrome-regex"></span>
+  <script type="text/javascript" src="js/popup.js"></script>
+</body>
 </html>
