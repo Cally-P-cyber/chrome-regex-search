@@ -16,9 +16,10 @@ A powerful Chrome extension that enhances your browsing experience with regular 
 ## Installation
 
 1. Install from Chrome Web Store:
-   - Visit [Chrome Web Store](https://chrome.google.com/webstore/detail/chrome-regex-search/bpelaihoicobbkgmhcbikncnpacdbknn)
-   - Click 'Add to Chrome' button
-   - Confirm the installation
+   - chrome://extensions/
+   - Enable developer mode
+   - Click Load unpacked
+   - In the file selection menu select the src folder 
 
 ## How to Use
 
