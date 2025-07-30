@@ -1,8 +1,5 @@
 # Chrome Regex Search
 
-[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/bpelaihoicobbkgmhcbikncnpacdbknn?style=flat-square)](https://chrome.google.com/webstore/detail/chrome-regex-search/bpelaihoicobbkgmhcbikncnpacdbknn)
-[![License](https://img.shields.io/github/license/rogershen/chrome-regex-search?style=flat-square)](LICENSE)
-
 <img src="https://raw.githubusercontent.com/rogershen/chrome-regex-search/master/src/icons/icons_128.png" align="right" style="padding-left: 10px;" width="128" height="128" alt="Chrome Regex Search Icon">
 
 A powerful Chrome extension that enhances your browsing experience with regular expression search capabilities, going beyond Chrome's built-in find functionality.
