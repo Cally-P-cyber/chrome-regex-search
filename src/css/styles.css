@@ -1,0 +1,184 @@
+/* Base styles */
+:root {
+  --grey-light: #f8f9fa;
+  --grey-medium: #dee2e6;
+  --grey-dark: #495057;
+  --blue-primary: #1a73e8;
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --bg-light: #ffffff;
+  --border-light: #ced4da;
+  --shadow-light: rgba(0, 0, 0, 0.05);
+  --error-color: #d93025;
+}
+
+body {
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 13px;
+  margin: 0;
+  padding: 10px;
+  min-width: 400px;
+  background-color: var(--bg-light);
+  color: var(--text-primary);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.chrome-find-container {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  background-color: var(--bg-light);
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  box-shadow: 0 1px 2px var(--shadow-light);
+  overflow: hidden;
+}
+
+#inputRegex {
+  flex: 1;
+  height: 30px;
+  padding: 0 8px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  outline: none;
+}
+
+#inputRegex::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+.find-button {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background-color 0.1s;
+}
+
+.find-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.find-button:active {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Sun/Moon Icons */
+.light-icon { display: none; }
+.dark-icon { display: inline; }
+.dark-mode .light-icon { display: inline; }
+.dark-mode .dark-icon { display: none; }
+
+.history-container, #history {
+  max-height: 300px;
+  overflow-y: auto;
+  border-top: 1px solid var(--border-light);
+  padding: 8px;
+  display: none;
+}
+
+.historyLink {
+  display: block;
+  padding: 5px;
+  color: var(--blue-primary);
+  text-decoration: none;
+  border-radius: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.historyLink:hover {
+  background-color: var(--grey-light);
+}
+
+.clearHistoryButton {
+  display: block;
+  width: 100%;
+  padding: 5px;
+  background-color: var(--grey-light);
+  border: 1px solid var(--border-light);
+  border-radius: 3px;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.clearHistoryButton:hover {
+  background-color: var(--grey-medium);
+}
+
+.error-chrome-regex:not(:empty) {
+  display: block;
+  color: var(--error-color);
+  padding: 8px;
+  font-size: 12px;
+  border-top: 1px solid var(--border-light);
+}
+
+/* Dark Mode */
+body.dark-mode {
+  --bg-light: #121212;
+  --text-primary: #e0e0e0;
+  --text-secondary: #9aa0a6;
+  --border-light: #444;
+  --grey-light: #2d2d2d;
+  --grey-medium: #3a3a3a;
+  background-color: var(--bg-light);
+  color: var(--text-primary);
+}
+
+.dark-mode #inputRegex {
+  background-color: transparent;
+  border: none;
+}
+
+.dark-mode .find-button:hover,
+.dark-mode .clearHistoryButton:hover,
+.dark-mode .historyLink:hover {
+  background-color: var(--grey-medium);
+}
+
+.dark-mode .clearHistoryButton,
+.dark-mode .find-button,
+.dark-mode .panel,
+.dark-mode .form-control,
+.dark-mode .panel-heading {
+  background-color: var(--grey-light);
+  border-color: var(--border-light);
+}
+
+/* Panel and Form */
+.panel {
+  background-color: var(--bg-light);
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+}
+
+.panel-heading {
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border-light);
+  background-color: var(--grey-light);
+}
+
+.form-control {
+  width: 100%;
+  height: 34px;
+  padding: 6px 12px;
+  color: inherit;
+  background-color: var(--bg-light);
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.form-control:focus {
+  border-color: var(--blue-primary);
+  box-shadow: 0 0 0 0.2rem rgba(26, 115, 232, 0.25);
+}

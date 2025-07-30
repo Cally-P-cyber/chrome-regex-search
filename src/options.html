@@ -2,54 +2,26 @@
 <html>
   <head>
     <title>Chrome Regex Search Options</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/styles.css">
     <script src="js/options.js"></script>
-    <style type="text/css">
-      .status-chrome-regex {
-        color: #FF0000;
-      }
-      .example-chrome-regex {
-        font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
-      }
-      .panel {
-        margin-bottom: 20px;
-        background-color: #fff;
-        border: 1px solid transparent;
-        border-radius: 4px;
-        -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
-                box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
-      }
-      .panel-body {
-        padding: 15px;
-      }
-      .panel-heading {
-        padding: 10px 15px;
-        border-bottom: 1px solid transparent;
-        border-top-left-radius: 3px;
-        border-top-right-radius: 3px;
-      }
-      .panel-default {
-        border-color: #ddd;
-      }
-      .panel-default > .panel-heading {
-        color: #333;
-        background-color: #f5f5f5;
-        border-color: #ddd;
-      }
-      .panel-default > .panel-heading + .panel-collapse .panel-body {
-        border-top-color: #ddd;
-      }
-      .panel-default > .panel-footer + .panel-collapse .panel-body {
-        border-bottom-color: #ddd;
-      }
-      .panel-title {
-        margin-top: 0;
-        margin-bottom: 0;
-        font-size: 16px;
-        color: inherit;
-      }
-    </style>
   </head>
   <body id="options">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Options</h3>
+      </div>
+      <div class="panel-body">
+        <div class="form-group">
+          <label for="theme-select">Theme:</label>
+          <select id="theme-select" class="form-control">
+            <option value="system">System Default</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
+      </div>
+    </div>
     <div class = "panel panel-default">
       <div class="panel-heading"><h3 class="panel-title">Chrome Regex Search Settings</h3></div>
       <div class="panel-body">

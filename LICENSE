@@ -1,3 +1,5 @@
+This is a fork of the original Chrome Regex Search extension by Roger Shen (https://github.com/rogershen/chrome-regex-search).
+
 The MIT License (MIT)
 
 Copyright (c) 2015 Roger Shen
@@ -5,6 +7,7 @@ Copyright (c) 2015 Roger Shen
 Additional contributors: 
 Chris White (GitHub @cxw42) 
 (GitHub @xzzv)
+[Cally Piland] (GitHub @Cally-P-cyber)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

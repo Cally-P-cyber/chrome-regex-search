@@ -11,6 +11,7 @@ var HISTORY_IS_EMPTY_TEXT = "Search history is empty.";
 var CLEAR_ALL_HISTORY_TEXT = "Clear History";
 var DEFAULT_CASE_INSENSITIVE = false;
 var MAX_HISTORY_LENGTH = 30;
+var DEFAULT_THEME = 'system';
 /*** CONSTANTS ***/
 
 /*** VARIABLES ***/
@@ -31,66 +32,121 @@ function isValidRegex(pattern) {
   }
 }
 
-/* Send message to content script of tab to select next result */
-function selectNext(){
-  chrome.tabs.query({
-    'active': true,
-    'currentWindow': true
-  },
-  function(tabs) {
-    if ('undefined' != typeof tabs[0].id && tabs[0].id) {
-      chrome.tabs.sendMessage(tabs[0].id, {
-        'message' : 'selectNextNode'
-      });
+// Check if content script is ready
+async function isContentScriptReady() {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tabs[0]?.id) {
+      throw new Error('No active tab found');
     }
-  });
-}
-
-/* Send message to content script of tab to select previous result */
-function selectPrev(){
-  chrome.tabs.query({
-    'active': true,
-    'currentWindow': true
-  },
-  function(tabs) {
-    if ('undefined' != typeof tabs[0].id && tabs[0].id) {
-      chrome.tabs.sendMessage(tabs[0].id, {
-        'message' : 'selectPrevNode'
-      });
-    }
-  });
-}
-
-/* Send message to pass input string to content script of tab to find and highlight regex matches */
-function passInputToContentScript(){
-  passInputToContentScript(false);
-}
-
-function passInputToContentScript(configurationChanged){
-  if (!processingKey) {
-    var regexString = document.getElementById('inputRegex').value;
-    if  (!isValidRegex(regexString)) {
-      document.getElementById('inputRegex').style.backgroundColor = ERROR_COLOR;
-    } else {
-      document.getElementById('inputRegex').style.backgroundColor = WHITE_COLOR;
-    }
-    chrome.tabs.query(
-      { 'active': true, 'currentWindow': true },
-      function(tabs) {
-        if ('undefined' != typeof tabs[0].id && tabs[0].id) {
-          processingKey = true;
-          chrome.tabs.sendMessage(tabs[0].id, {
-            'message' : 'search',
-            'regexString' : regexString,
-            'configurationChanged' : configurationChanged,
-            'getNext' : true
-          });
-          sentInput = true;
-        }
-      }
-    );
+    
+    // Try to send a ping to the content script
+    await chrome.tabs.sendMessage(tabs[0].id, { message: 'ping' });
+    return true;
+  } catch (error) {
+    console.error('Content script not ready:', error);
+    return false;
   }
 }
+
+// Show error message to user
+function showError(message) {
+  const error = document.getElementById('error');
+  error.textContent = message;
+  error.style.color = ERROR_COLOR;
+  document.getElementById('numResults').textContent = '';
+}
+
+/* Send input to content script of tab to search for regex */
+const passInputToContentScript = async (configurationChanged) => {
+  const input = document.getElementById('inputRegex');
+  const error = document.getElementById('error');
+  
+  // Clear previous error and highlights
+  error.textContent = '';
+  
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tabs[0]?.id) {
+      throw new Error('No active tab found');
+    }
+    
+    // If input is empty, clear highlights and return
+    if (input.value === '') {
+      await chrome.tabs.sendMessage(tabs[0].id, { message: 'clearHighlight' })
+        .catch(() => {}); // Ignore errors when clearing
+      document.getElementById('numResults').textContent = '';
+      return;
+    }
+    
+    // Validate regex
+    if (!isValidRegex(input.value)) {
+      throw new Error('Invalid regular expression');
+    }
+    
+    // Check if content script is ready
+    const isReady = await isContentScriptReady();
+    if (!isReady) {
+      showError('Please refresh the page and try again.');
+      return;
+    }
+    
+    // Send search message to content script
+    await chrome.tabs.sendMessage(tabs[0].id, {
+      message: 'search',
+      regexString: input.value,
+      configurationChanged: configurationChanged
+    });
+    
+    // Add to history if this is a new search
+    if (!configurationChanged) {
+      addToHistory(input.value);
+    }
+  } catch (error) {
+    showError(error.message);
+  }
+};
+
+/* Send message to content script of tab to select next result */
+const selectNext = async () => {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tabs[0]?.id) {
+      await chrome.tabs.sendMessage(tabs[0].id, { message: 'selectNextNode' })
+        .catch(error => {
+          if (error.message.includes('Could not establish connection')) {
+            showError('Please refresh the page and try again.');
+          } else {
+            throw error;
+          }
+        });
+    }
+  } catch (error) {
+    showError(error.message);
+  }
+};
+
+/* Send message to content script of tab to select previous result */
+const selectPrev = async () => {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tabs[0]?.id) {
+      await chrome.tabs.sendMessage(tabs[0].id, { message: 'selectPrevNode' })
+        .catch(error => {
+          if (error.message.includes('Could not establish connection')) {
+            showError('Please refresh the page and try again.');
+          } else {
+            throw error;
+          }
+        });
+    }
+  } catch (error) {
+    showError(error.message);
+  }
+};
+
+/* Send message to pass input string to content script of tab to find and highlight regex matches */
+// Using the async/await version of passInputToContentScript defined above
 
 function createHistoryLineElement(text) {
   var deleteEntrySpan = document.createElement('span');
@@ -204,6 +260,60 @@ function clearSearchHistory() {
   updateHistoryDiv();
 }
 
+// Apply theme based on preference
+function applyTheme(theme) {
+  const body = document.body;
+  const icon = document.querySelector('#toggle-darkmode i');
+  const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  
+  if (isDark) {
+    body.classList.add('dark-mode');
+    icon.classList.remove('fa-moon');
+    icon.classList.add('fa-sun');
+    document.querySelector('#toggle-darkmode').title = 'Switch to Light Mode';
+  } else {
+    body.classList.remove('dark-mode');
+    icon.classList.remove('fa-sun');
+    icon.classList.add('fa-moon');
+    document.querySelector('#toggle-darkmode').title = 'Switch to Dark Mode';
+  }
+}
+
+// Toggle between light and dark mode
+function toggleDarkMode() {
+  // Get current theme
+  chrome.storage.local.get(['theme'], function(result) {
+    let currentTheme = result.theme || DEFAULT_THEME;
+    let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    // Save the new theme preference
+    chrome.storage.local.set({ theme: newTheme }, function() {
+      applyTheme(newTheme);
+      // Notify options page about the theme change
+      chrome.runtime.sendMessage({ action: 'updateTheme', theme: newTheme });
+    });
+  });
+}
+
+// Initialize theme from saved preference
+function initDarkMode() {
+  // Listen for system theme changes
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    chrome.storage.local.get(['theme'], function(result) {
+      const theme = result.theme || DEFAULT_THEME;
+      if (theme === 'system') {
+        applyTheme('system');
+      }
+    });
+  });
+  
+  // Set up the toggle button
+  document.getElementById('toggle-darkmode').addEventListener('click', function(e) {
+    e.preventDefault();
+    toggleDarkMode();
+  });
+}
+
 
 /*** LISTENERS ***/
 document.getElementById('next').addEventListener('click', function() {
@@ -231,39 +341,69 @@ document.getElementById('insensitive').addEventListener('click', function() {
   toggleCaseInsensitive();
 });
 
-document.getElementById('copy-to-clipboard').addEventListener('click', function () {
-  chrome.tabs.query({
-      'active': true,
-      'currentWindow': true
-    },
-    function (tabs) {
-      if ('undefined' != typeof tabs[0].id && tabs[0].id) {
-        chrome.tabs.sendMessage(tabs[0].id, {
-          'message': 'copyToClipboard'
-        });
-      }
-    });
+// Add dark mode toggle event listener
+document.getElementById('toggle-darkmode').addEventListener('click', function(e) {
+  e.preventDefault();
+  toggleDarkMode();
 });
 
-/* Received returnSearchInfo message, populate popup UI */ 
+// Load theme preference and initialize
+chrome.storage.local.get(['theme'], function(result) {
+  const theme = result.theme || DEFAULT_THEME;
+  applyTheme(theme);
+});
+
+// Initialize dark mode when popup loads
+initDarkMode();
+
+// Handle all incoming messages
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  if ('returnSearchInfo' == request.message) {
+  // Handle theme updates from options page
+  if (request.action === 'updateTheme') {
+    applyTheme(request.theme);
+    return true;
+  }
+  
+  // Handle search info updates
+  if (request.message === 'returnSearchInfo') {
     processingKey = false;
     if (request.numResults > 0) {
-      document.getElementById('numResults').textContent = String(request.currentSelection+1) + ' of ' + String(request.numResults);
+      document.getElementById('numResults').textContent = 
+        String(request.currentSelection + 1) + ' of ' + String(request.numResults);
     } else {
-      document.getElementById('numResults').textContent = String(request.currentSelection) + ' of ' + String(request.numResults);
+      document.getElementById('numResults').textContent = 
+        String(request.currentSelection) + ' of ' + String(request.numResults);
     }
     if (!sentInput) {
       document.getElementById('inputRegex').value = request.regexString;
     }
-    if (request.numResults > 0 && request.cause == 'selectNode') {
+    if (request.numResults > 0 && request.cause === 'selectNode') {
       addToHistory(request.regexString);
     }
-    if (request.regexString !== document.getElementById('inputRegex').value) {
-      passInputToContentScript();
-    }
+    return true;
   }
+  
+  // Handle regex string updates
+  if (request.regexString && request.regexString !== document.getElementById('inputRegex').value) {
+    document.getElementById('inputRegex').value = request.regexString;
+    passInputToContentScript();
+    return true;
+  }
+  
+  return false;
+});
+
+document.getElementById('copy-to-clipboard').addEventListener('click', function() {
+  chrome.tabs.query({
+    'active': true,
+    'currentWindow': true
+  }, function(tabs) {
+    if (tabs[0]?.id) {
+      chrome.tabs.sendMessage(tabs[0].id, {
+        'message': 'copyToClipboard'
+      });
+    }
+  });
 });
 
 /* Key listener for selectNext and selectPrev
