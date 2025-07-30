@@ -24,7 +24,7 @@ body {
 }
 
 *::-webkit-scrollbar {
-  width: 2vw;
+  width: clamp(3px, 2vw, 7px);
 }
 
 *::-webkit-scrollbar-track {
@@ -152,6 +152,7 @@ body {
   padding: 5px;
   width: 16vw;
   height: 6vh;
+  align-content: center;
   margin: 8px auto 4px auto;
   background-color: var(--bg-light);
   border: 1px solid var(--border-light);
@@ -239,4 +240,23 @@ body.dark-mode {
 .dark-mode .panel-heading {
   background-color: var(--grey-light);
   border-color: var(--border-light);
+}
+
+
+/* Options Page */
+.save-restore-buttons {
+  padding: 5px;
+  width: 16vw;
+  height: 6vh;
+  cursor: pointer;
+  margin: 8px auto 4px auto;
+  background-color: var(--bg-light);
+  border: 1px solid var(--border-light);
+  border-radius: 3px ;
+  text-align: center;
+  align-content: center;
+  text-decoration: none;
+  color: var(--text-primary);
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: clamp(0.7rem, 1.5vh, 2.0rem);
 }

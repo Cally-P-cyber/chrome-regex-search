@@ -7,12 +7,12 @@
     <script src="js/options.js"></script>
   </head>
   <body id="options">
-    <div class="panel panel-default">
+    <div class="panel">
       <div class="panel-heading">
-        <h3 class="panel-title">Options</h3>
+        <h3>Options</h3>
       </div>
-      <div class="panel-body">
-        <div class="form-group">
+      <div>
+        <div>
           <label for="theme-select">Theme:</label>
           <select id="theme-select" class="form-control">
             <option value="system">System Default</option>
@@ -22,46 +22,46 @@
         </div>
       </div>
     </div>
-    <div class = "panel panel-default">
-      <div class="panel-heading"><h3 class="panel-title">Chrome Regex Search Settings</h3></div>
-      <div class="panel-body">
-        <div class="panel panel-default">
+    <div class = "panel">
+      <div class="panel-heading"><h3>Chrome Regex Search Settings</h3></div>
+      <div>
+        <div class="panel">
           <div class="panel-heading">What colors should be used to highlight regex matches on the web page?</div>
-          <div class="panel-body">
+          <div>
             <p><input id="highlightColor" type="color" /> <label for="highlightColor">Highlight color</label></p>
             <p><input id="selectedColor" type="color" /> <label for="selectedColor">Selected color</label></p>
             <p><input id="textColor" type="color" /> <label for="colorText">Text color</label></p>
-            <p class="example-chrome-regex">This is <span id = "exampleHighlighted"> highlighted</span> text.</p>
-            <p class="example-chrome-regex">This is <span id = "exampleSelected"> selected</span> text.</p>
+            <p>This is <span id = "exampleHighlighted"> highlighted</span> text.</p>
+            <p>This is <span id = "exampleSelected"> selected</span> text.</p>
           </div>
         </div>
-        <div class="panel panel-default">
+        <div class="panel">
           <div class="panel-heading">Should results be highlighted instantaneously as you type (like Google Instant)?</div>
-          <div class="panel-body">
+          <div>
             <input id="instantResults" type="checkbox" /> <label for="instantResults">Instant highlighting</label>
             <br />
             <small>When this is disabled, you must press 'Enter' to trigger a search for regex matches.</small>
           </div>
         </div>
-        <div class="panel panel-default">
+        <div class="panel">
           <div class="panel-heading">What's the maximum number of regex matches that should be highlighted on the web page?</div>
-          <div class="panel-body">
+          <div>
             <label for="maxResults">Max results</label> <input id="maxResults" type="text" name="maxResults" ></input>
             <br />
             <small>The smaller this number is, the better your performance (especially for complex pages).</small>
           </div>
         </div>
-        <div class="panel panel-default">
+        <div class="panel">
           <div class="panel-heading">What's the maximum number of search history records that should be stored??</div>
-          <div class="panel-body">
+          <div>
             <label for="maxHistoryLength">Max records</label> <input id="maxHistoryLength" type="text" name="maxHistoryLength" ></input>
             <br />
             <small>The default number of records is 30.</small>
           </div>
         </div>
-        <button id="buttonSave" type="save">Save Settings</button>
-        <button id="buttonReset" type="reset">Reset to Defaults</button>
-        <p id="status" class="status-chrome-regex"></p>
+        <button id="buttonSave" class="save-restore-buttons " type="save">Save Settings</button>
+        <button id="buttonReset" class="save-restore-buttons " type="reset">Reset to Defaults</button>
+        <p id="status"></p>
       </div>
     </div>
   </body>

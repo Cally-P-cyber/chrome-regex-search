@@ -50,6 +50,7 @@ function validateMaxResults() {
 function saveThemePreference() {
   const themeSelect = document.getElementById('theme-select');
   const theme = themeSelect.value;
+  applyTheme(theme)
   chrome.storage.local.set({ theme: theme }, function() {
     // Update the theme in the popup as well
     chrome.runtime.sendMessage({ action: 'updateTheme', theme: theme });
@@ -64,9 +65,9 @@ function applyTheme(theme) {
   body.classList.remove('light-theme', 'dark-theme');
   
   if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    body.classList.add('dark-theme');
+    body.classList.add('dark-mode');
   } else {
-    body.classList.add('light-theme');
+    body.classList.remove('dark-mode');
   }
 }
 
