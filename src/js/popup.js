@@ -362,7 +362,20 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     applyTheme(request.theme);
     return true;
   }
-  
+  if (request.message === 'returnClipBoard') {
+    const copyToClipboardMessage = document.getElementById('clipboardNotification')
+    copyToClipboardMessage.style.display = "block"
+    setTimeout(() => {
+      copyToClipboardMessage.style.display = "none"
+    }, 1500)
+    try{
+       navigator.clipboard.writeText(request.clipboard)
+    }
+    catch(err){
+      console.log(err)
+    }
+    return true;
+  }
   // Handle search info updates
   if (request.message === 'returnSearchInfo') {
     processingKey = false;
@@ -393,18 +406,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 });
 
 document.getElementById('copy-to-clipboard').addEventListener('click', function() {
-  const copyToClipboardMessage = document.getElementById('clipboardNotification')
-  copyToClipboardMessage.style.display = "block"
-  setTimeout(()=> {
-    copyToClipboardMessage.style.display = "none"
-  },1500)
   chrome.tabs.query({
     'active': true,
     'currentWindow': true
-  }, function(tabs) {
+  }, async function(tabs) {
     if (tabs[0]?.id) {
-      chrome.tabs.sendMessage(tabs[0].id, {
-        'message': 'copyToClipboard'
+      await chrome.tabs.sendMessage(tabs[0].id, {
+        'message': 'copyToClipboard',
       });
     }
   });
