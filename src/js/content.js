@@ -28,6 +28,15 @@ Element.prototype.visible = function() {
 
 
 /*** FUNCTIONS ***/
+
+/* */ 
+async function sendClipBoard(text) {
+  chrome.runtime.sendMessage({
+    message: 'returnClipBoard',
+    clipboard: text,
+  });
+}
+
 /* Initialize search information for this tab */
 function initSearchInfo(pattern) {
   var pattern = typeof pattern !== 'undefined' ? pattern : '';
@@ -268,17 +277,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     );
   }
   else if ('copyToClipboard' == request.message) {
-    var clipboardHelper = document.createElement('textarea');
-    try {
-      var text = searchInfo.highlightedNodes.map(function (n) {
-        return n.trim().innerText;
-      }).join('\n');
-      clipboardHelper.appendChild(document.createTextNode(text));
-      document.body.appendChild(clipboardHelper);
-      navigator.clipboard.readText().then(()=>clipboardHelper)
-    } finally {
-      document.body.removeChild(clipboardHelper);
-    }
+    var text = searchInfo.highlightedNodes.map(function (n) {
+      return n.innerText?.trim();
+    }).join('\n');
+  sendClipBoard(text)
   }
   /* Received getSearchInfo message, return search information for this tab */
   else if ('getSearchInfo' == request.message) {
@@ -286,8 +288,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     returnSearchInfo('getSearchInfo');
   }
 });
-/*** LISTENERS ***/
 
+/*** LISTENERS ***/
 
 /*** INIT ***/
 initSearchInfo();
