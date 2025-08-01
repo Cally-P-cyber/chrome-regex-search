@@ -13,14 +13,14 @@ var DEFAULT_CASE_INSENSITIVE = false;
 var MAX_HISTORY_LENGTH = 30;
 var DEFAULT_THEME = 'system';
 /*** CONSTANTS ***/
-
 /*** VARIABLES ***/
 var sentInput = false;
 var processingKey = false;
 var searchHistory = null;
 var maxHistoryLength = MAX_HISTORY_LENGTH;
+var inputStoped = true;
+const input = document.getElementById('inputRegex');
 /*** VARIABLES ***/
-
 /*** FUNCTIONS ***/
 /* Validate that a given pattern string is a valid regex */
 function isValidRegex(pattern) {
@@ -58,7 +58,6 @@ function showError(message) {
 }
 /* Send input to content script of tab to search for regex */
 const passInputToContentScript = async (configurationChanged) => {
-  const input = document.getElementById('inputRegex');
   const error = document.getElementById('error');
   
   // Clear previous error and highlights
@@ -201,22 +200,24 @@ function updateHistoryDiv() {
   }
 }
 
-function addToHistory(regex) {
-  if (regex && searchHistory !== null) {
-    if (searchHistory.length == 0 || searchHistory[searchHistory.length - 1] != regex) {
-      searchHistory.push(regex);
-    }
-    for (var i = searchHistory.length - 2; i >= 0; i--) {
-      if (searchHistory[i] == regex) {
-        searchHistory.splice(i, 1);
+async function addToHistory(regex) {
+  if(DEFAULT_INSTANT_RESULTS)await new Promise(resolve =>historyTimer = setTimeout(resolve, 1001));
+    if (regex && searchHistory !== null && inputStoped == true) {
+      if (searchHistory.length == 0 || searchHistory[searchHistory.length - 1] != regex) {
+        searchHistory.push(regex);
       }
+      for (var i = searchHistory.length - 2; i >= 0; i--) {
+        if (searchHistory[i] == regex) {
+          searchHistory.splice(i, 1);
+        }
+      }
+      if (searchHistory.length > maxHistoryLength) {
+        searchHistory.splice(0, searchHistory.length - maxHistoryLength);
+      }
+      chrome.storage.local.set({ searchHistory: searchHistory });
+      updateHistoryDiv();
     }
-    if (searchHistory.length > maxHistoryLength) {
-      searchHistory.splice(0, searchHistory.length - maxHistoryLength);
-    }
-    chrome.storage.local.set({searchHistory: searchHistory});
-    updateHistoryDiv();
-  }
+
 }
 
 function setHistoryVisibility(makeVisible) {
@@ -449,6 +450,18 @@ chrome.storage.local.get({
     if(result.instantResults) {
       document.getElementById('inputRegex').addEventListener('input', function() {
         passInputToContentScript();
+        /*** Input listener logic ***/
+        let debounceTimer = null;
+        let historyTimer = null;
+        input.addEventListener('input', () => {
+          inputStoped = false
+          clearTimeout(debounceTimer)
+          clearTimeout(historyTimer)
+          debounceTimer = setTimeout(() => {
+            inputStoped = true
+          }, 1000)
+        })
+        /*** Input listener logic ***/
       });
     } else {
       document.getElementById('inputRegex').addEventListener('change', function() {
