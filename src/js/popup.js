@@ -20,14 +20,16 @@ var searchHistory = null;
 var maxHistoryLength = MAX_HISTORY_LENGTH;
 var inputStoped = true;
 const input = document.getElementById('inputRegex');
+const error = document.getElementById('error');
+const numResults = document.getElementById('numResults')
 /*** VARIABLES ***/
 /*** FUNCTIONS ***/
 /* Validate that a given pattern string is a valid regex */
 function isValidRegex(pattern) {
-  try{
+  try {
     var regex = new RegExp(pattern);
     return true;
-  } catch(e) {
+  } catch (e) {
     return false;
   }
 }
@@ -39,7 +41,7 @@ async function isContentScriptReady() {
     if (!tabs[0]?.id) {
       throw new Error('No active tab found');
     }
-    
+
     // Try to send a ping to the content script
     await chrome.tabs.sendMessage(tabs[0].id, { message: 'ping' });
     return true;
@@ -51,60 +53,52 @@ async function isContentScriptReady() {
 
 // Show error message to user
 function showError(message) {
-  const error = document.getElementById('error');
   error.textContent = message;
   error.style.color = ERROR_COLOR;
-  document.getElementById('numResults').textContent = '';
+  numResults.textContent = '';
 }
-/* Send input to content script of tab to search for regex */
-const passInputToContentScript = async (configurationChanged) => {
-  const error = document.getElementById('error');
-  
-  // Clear previous error and highlights
-  error.textContent = '';
-  
-  try {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tabs[0]?.id) {
-      throw new Error('No active tab found');
-    }
-    
-    // If input is empty, clear highlights and return
-    if (input.value === '') {
-      await chrome.tabs.sendMessage(tabs[0].id, { message: 'clearHighlight' })
-        .catch(() => {}); // Ignore errors when clearing
-      document.getElementById('numResults').textContent = '';
-      return;
-    }
-    
-    // Validate regex
-    if (!isValidRegex(input.value)) {
-      throw new Error('Invalid regular expression');
-    }
-    
-    // Check if content script is ready
-    const isReady = await isContentScriptReady();
-    if (!isReady) {
-      showError('Please refresh the page and try again.');
-      return;
-    }
-    
-    // Send search message to content script
-    await chrome.tabs.sendMessage(tabs[0].id, {
-      message: 'search',
-      regexString: input.value,
-      configurationChanged: configurationChanged
-    });
-    
-    // Add to history if this is a new search
-    if (!configurationChanged) {
-      addToHistory(input.value);
-    }
-  } catch (error) {
-    showError(error.message);
-  }
-};
 
+/* Send input to content script of tab to search for regex */
+function passInputToContentScript(){
+  passInputToContentScript(false);
+}
+
+
+function passInputToContentScript(configurationChanged) {
+  if (!processingKey) {
+    error.textContent = '';
+    try {
+      var regexString = document.getElementById('inputRegex').value;
+      if (!isValidRegex(regexString)) {
+        throw new Error('Invalid regular expression');
+      }
+      chrome.tabs.query(
+        { 'active': true, 'currentWindow': true },
+        function (tabs) {
+          if ('undefined' != typeof tabs[0].id && tabs[0].id) {
+            processingKey = true;
+            chrome.tabs.sendMessage(tabs[0].id, {
+              'message': 'search',
+              'regexString': regexString,
+              'configurationChanged': configurationChanged,
+              'getNext': true
+            });
+            sentInput = true;
+            // Add to history if this is a new search
+            if (!configurationChanged) {
+              addToHistory(input.value);
+            }
+          }
+          else {
+            throw new Error('No active tab found');
+          }
+        }
+      );
+    } catch (error) {
+      showError(error.message);
+    }
+  }
+}
 /* Send message to content script of tab to select next result */
 const selectNext = async () => {
   try {
@@ -150,19 +144,19 @@ function createHistoryLineElement(text) {
   var deleteEntryDiv = document.createElement('div');
   deleteEntryDiv.className = 'historyDeleteEntry'
   deleteEntryDiv.textContent = '\u2715';
-  deleteEntryDiv.addEventListener('click', function() {
+  deleteEntryDiv.addEventListener('click', function () {
     for (var i = searchHistory.length - 1; i >= 0; i--) {
       if (searchHistory[i] == text) {
         searchHistory.splice(i, 1);
       }
     }
-    chrome.storage.local.set({searchHistory: searchHistory});
+    chrome.storage.local.set({ searchHistory: searchHistory });
     updateHistoryDiv();
   });
   var linkdiv = document.createElement('div');
   linkdiv.className = 'historyLink';
   linkdiv.textContent = text;
-  linkdiv.addEventListener('click', function() {
+  linkdiv.addEventListener('click', function () {
     if (document.getElementById('inputRegex').value !== text) {
       document.getElementById('inputRegex').value = text;
       passInputToContentScript();
@@ -170,7 +164,7 @@ function createHistoryLineElement(text) {
     }
   });
   var lineDiv = document.createElement('div');
-  lineDiv.className= 'history-items-container';
+  lineDiv.className = 'history-items-container';
   lineDiv.appendChild(deleteEntryDiv);
   lineDiv.appendChild(linkdiv);
   return lineDiv;
@@ -201,29 +195,29 @@ function updateHistoryDiv() {
 }
 
 async function addToHistory(regex) {
-  if(DEFAULT_INSTANT_RESULTS)await new Promise(resolve =>historyTimer = setTimeout(resolve, 1001));
-    if (regex && searchHistory !== null && inputStoped == true) {
-      if (searchHistory.length == 0 || searchHistory[searchHistory.length - 1] != regex) {
-        searchHistory.push(regex);
-      }
-      for (var i = searchHistory.length - 2; i >= 0; i--) {
-        if (searchHistory[i] == regex) {
-          searchHistory.splice(i, 1);
-        }
-      }
-      if (searchHistory.length > maxHistoryLength) {
-        searchHistory.splice(0, searchHistory.length - maxHistoryLength);
-      }
-      chrome.storage.local.set({ searchHistory: searchHistory });
-      updateHistoryDiv();
+  if (DEFAULT_INSTANT_RESULTS) await new Promise(resolve => historyTimer = setTimeout(resolve, 1001));
+  if (regex && searchHistory !== null && inputStoped == true) {
+    if (searchHistory.length == 0 || searchHistory[searchHistory.length - 1] != regex) {
+      searchHistory.push(regex);
     }
+    for (var i = searchHistory.length - 2; i >= 0; i--) {
+      if (searchHistory[i] == regex) {
+        searchHistory.splice(i, 1);
+      }
+    }
+    if (searchHistory.length > maxHistoryLength) {
+      searchHistory.splice(0, searchHistory.length - maxHistoryLength);
+    }
+    chrome.storage.local.set({ searchHistory: searchHistory });
+    updateHistoryDiv();
+  }
 
 }
 
 function setHistoryVisibility(makeVisible) {
   document.getElementById('history').style.display = makeVisible ? 'block' : 'none';
   document.getElementById('show-history').title = makeVisible ? HIDE_HISTORY_TITLE : SHOW_HISTORY_TITLE;
-  if(makeVisible) {
+  if (makeVisible) {
     document.getElementById('show-history').className = 'find-button selected';
   } else {
     document.getElementById('show-history').className = 'find-button';
@@ -231,32 +225,32 @@ function setHistoryVisibility(makeVisible) {
 }
 
 function setCaseInsensitiveElement() {
-  var caseInsensitive = chrome.storage.local.get({'caseInsensitive':DEFAULT_CASE_INSENSITIVE},
-  function (result) {
-    document.getElementById('insensitive').title = result.caseInsensitive ? DISABLE_CASE_INSENSITIVE_TITLE : ENABLE_CASE_INSENSITIVE_TITLE;
-    if(result.caseInsensitive) {
-      document.getElementById('insensitive').className = 'find-button selected';
-    } else {
-      document.getElementById('insensitive').className = 'find-button';
-    }
-  });
+  var caseInsensitive = chrome.storage.local.get({ 'caseInsensitive': DEFAULT_CASE_INSENSITIVE },
+    function (result) {
+      document.getElementById('insensitive').title = result.caseInsensitive ? DISABLE_CASE_INSENSITIVE_TITLE : ENABLE_CASE_INSENSITIVE_TITLE;
+      if (result.caseInsensitive) {
+        document.getElementById('insensitive').className = 'find-button selected';
+      } else {
+        document.getElementById('insensitive').className = 'find-button';
+      }
+    });
 }
 function toggleCaseInsensitive() {
   var caseInsensitive = document.getElementById('insensitive').className == 'find-button selected';
   document.getElementById('insensitive').title = caseInsensitive ? ENABLE_CASE_INSENSITIVE_TITLE : DISABLE_CASE_INSENSITIVE_TITLE;
-  if(caseInsensitive) {
+  if (caseInsensitive) {
     document.getElementById('insensitive').className = 'find-button';
   } else {
     document.getElementById('insensitive').className = 'find-button selected';
   }
   sentInput = false;
-  chrome.storage.local.set({caseInsensitive: !caseInsensitive});
+  chrome.storage.local.set({ caseInsensitive: !caseInsensitive });
   passInputToContentScript(true);
 }
 
 function clearSearchHistory() {
   searchHistory = [];
-  chrome.storage.local.set({searchHistory: searchHistory});
+  chrome.storage.local.set({ searchHistory: searchHistory });
   updateHistoryDiv();
 }
 
@@ -265,7 +259,7 @@ function applyTheme(theme) {
   const body = document.body;
   const icon = document.querySelector('#toggle-darkmode i');
   const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  
+
   if (isDark) {
     body.classList.add('dark-mode');
     icon.classList.remove('fa-moon');
@@ -282,12 +276,12 @@ function applyTheme(theme) {
 // Toggle between light and dark mode
 function toggleDarkMode() {
   // Get current theme
-  chrome.storage.local.get(['theme'], function(result) {
+  chrome.storage.local.get(['theme'], function (result) {
     let currentTheme = result.theme || DEFAULT_THEME;
     let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
+
     // Save the new theme preference
-    chrome.storage.local.set({ theme: newTheme }, function() {
+    chrome.storage.local.set({ theme: newTheme }, function () {
       applyTheme(newTheme);
       // Notify options page about the theme change
       chrome.runtime.sendMessage({ action: 'updateTheme', theme: newTheme });
@@ -299,16 +293,16 @@ function toggleDarkMode() {
 function initDarkMode() {
   // Listen for system theme changes
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-    chrome.storage.local.get(['theme'], function(result) {
+    chrome.storage.local.get(['theme'], function (result) {
       const theme = result.theme || DEFAULT_THEME;
       if (theme === 'system') {
         applyTheme('system');
       }
     });
   });
-  
+
   // Set up the toggle button
-  document.getElementById('toggle-darkmode').addEventListener('click', function(e) {
+  document.getElementById('toggle-darkmode').addEventListener('click', function (e) {
     e.preventDefault();
     toggleDarkMode();
   });
@@ -316,39 +310,39 @@ function initDarkMode() {
 
 
 /*** LISTENERS ***/
-document.getElementById('next').addEventListener('click', function() {
+document.getElementById('next').addEventListener('click', function () {
   selectNext();
 });
 
-document.getElementById('prev').addEventListener('click', function() {
+document.getElementById('prev').addEventListener('click', function () {
   selectPrev();
 });
 
-document.getElementById('clear').addEventListener('click', function() {
+document.getElementById('clear').addEventListener('click', function () {
   sentInput = false;
   document.getElementById('inputRegex').value = '';
   passInputToContentScript();
   document.getElementById('inputRegex').focus();
 });
 
-document.getElementById('show-history').addEventListener('click', function() {
+document.getElementById('show-history').addEventListener('click', function () {
   var makeVisible = document.getElementById('history').style.display == 'none';
   setHistoryVisibility(makeVisible);
-  chrome.storage.local.set({isSearchHistoryVisible: makeVisible});
+  chrome.storage.local.set({ isSearchHistoryVisible: makeVisible });
 });
 
-document.getElementById('insensitive').addEventListener('click', function() {
+document.getElementById('insensitive').addEventListener('click', function () {
   toggleCaseInsensitive();
 });
 
 // Add dark mode toggle event listener
-document.getElementById('toggle-darkmode').addEventListener('click', function(e) {
+document.getElementById('toggle-darkmode').addEventListener('click', function (e) {
   e.preventDefault();
   toggleDarkMode();
 });
 
 // Load theme preference and initialize
-chrome.storage.local.get(['theme'], function(result) {
+chrome.storage.local.get(['theme'], function (result) {
   const theme = result.theme || DEFAULT_THEME;
   applyTheme(theme);
 });
@@ -357,7 +351,7 @@ chrome.storage.local.get(['theme'], function(result) {
 initDarkMode();
 
 // Handle all incoming messages
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   // Handle theme updates from options page
   if (request.action === 'updateTheme') {
     applyTheme(request.theme);
@@ -369,23 +363,21 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     setTimeout(() => {
       copyToClipboardMessage.style.display = "none"
     }, 1500)
-    try{
-       navigator.clipboard.writeText(request.clipboard)
+    try {
+      navigator.clipboard.writeText(request.clipboard)
     }
-    catch(err){
+    catch (err) {
       console.log(err)
     }
     return true;
   }
   // Handle search info updates
   if (request.message === 'returnSearchInfo') {
-    processingKey = false;
     if (request.numResults > 0) {
-      document.getElementById('numResults').textContent = 
+      numResults.textContent =
         String(request.currentSelection + 1) + ' of ' + String(request.numResults);
     } else {
-      document.getElementById('numResults').textContent = 
-        String(request.currentSelection) + ' of ' + String(request.numResults);
+      numResults.textContent = ''
     }
     if (!sentInput) {
       document.getElementById('inputRegex').value = request.regexString;
@@ -393,24 +385,25 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.numResults > 0 && request.cause === 'selectNode') {
       addToHistory(request.regexString);
     }
+    processingKey = false;
     return true;
   }
-  
+
   // Handle regex string updates
   if (request.regexString && request.regexString !== document.getElementById('inputRegex').value) {
     document.getElementById('inputRegex').value = request.regexString;
     passInputToContentScript();
     return true;
   }
-  
+
   return false;
 });
 
-document.getElementById('copy-to-clipboard').addEventListener('click', function() {
+document.getElementById('copy-to-clipboard').addEventListener('click', function () {
   chrome.tabs.query({
     'active': true,
     'currentWindow': true
-  }, async function(tabs) {
+  }, async function (tabs) {
     if (tabs[0]?.id) {
       await chrome.tabs.sendMessage(tabs[0].id, {
         'message': 'copyToClipboard',
@@ -423,32 +416,33 @@ document.getElementById('copy-to-clipboard').addEventListener('click', function(
  * Thanks a lot to Cristy from StackOverflow for this AWESOME solution
  * http://stackoverflow.com/questions/5203407/javascript-multiple-keys-pressed-at-once */
 var map = [];
-onkeydown = onkeyup = function(e) {
-    map[e.keyCode] = e.type == 'keydown';
-    if (document.getElementById('inputRegex') === document.activeElement) { //input element is in focus
-      if (!map[16] && map[13]) { //ENTER
-        if (sentInput) {
-          selectNext();
-        } else {
-          passInputToContentScript();
-        }
-      } else if (map[16] && map[13]) { //SHIFT + ENTER
-        selectPrev();
+onkeydown = onkeyup = function (e) {
+  map[e.keyCode] = e.type == 'keydown';
+  if (document.getElementById('inputRegex') === document.activeElement) { //input element is in focus
+    if (!map[16] && map[13]) { //ENTER
+      if (sentInput) {
+        selectNext();
+      } else {
+        passInputToContentScript();
       }
+    } else if (map[16] && map[13]) { //SHIFT + ENTER
+      selectPrev();
     }
+  }
 }
 /*** LISTENERS ***/
 
 /*** INIT ***/
 /* Retrieve from storage whether we should use instant results or not */
 chrome.storage.local.get({
-    'instantResults' : DEFAULT_INSTANT_RESULTS,
-    'maxHistoryLength' : MAX_HISTORY_LENGTH,
-    'searchHistory' : null,
-    'isSearchHistoryVisible' : false},
-  function(result) {
-    if(result.instantResults) {
-      document.getElementById('inputRegex').addEventListener('input', function() {
+  'instantResults': DEFAULT_INSTANT_RESULTS,
+  'maxHistoryLength': MAX_HISTORY_LENGTH,
+  'searchHistory': null,
+  'isSearchHistoryVisible': false
+},
+  function (result) {
+    if (result.instantResults) {
+      document.getElementById('inputRegex').addEventListener('input', function () {
         passInputToContentScript();
         /*** Input listener logic ***/
         let debounceTimer = null;
@@ -464,15 +458,15 @@ chrome.storage.local.get({
         /*** Input listener logic ***/
       });
     } else {
-      document.getElementById('inputRegex').addEventListener('change', function() {
+      document.getElementById('inputRegex').addEventListener('change', function () {
         passInputToContentScript();
       });
     }
     console.log(result);
-    if(result.maxHistoryLength) {
+    if (result.maxHistoryLength) {
       maxHistoryLength = result.maxHistoryLength;
     }
-    if(result.searchHistory) {
+    if (result.searchHistory) {
       searchHistory = result.searchHistory.slice(0);
     } else {
       searchHistory = [];
@@ -487,32 +481,45 @@ chrome.tabs.query({
   'active': true,
   'currentWindow': true
 },
-function(tabs) {
-  if ('undefined' != typeof tabs[0].id && tabs[0].id) {
-    chrome.tabs.sendMessage(tabs[0].id, {
-      'message' : 'getSearchInfo'
-    }, function(response){
-      if (response) {
-        // Content script is active
-        console.log(response);
-      } else {
-        console.log(response);
-        document.getElementById('error').textContent = ERROR_TEXT;
-      }
-    });
-  }
-});
+  function (tabs) {
+    if ('undefined' != typeof tabs[0].id && tabs[0].id) {
+      chrome.tabs.sendMessage(tabs[0].id, {
+        'message': 'getSearchInfo'
+      }, function (response) {
+        if (response) {
+          // Content script is active
+          console.log(response);
+        } else {
+          console.log(response);
+          document.getElementById('error').textContent = ERROR_TEXT;
+        }
+      });
+    }
+  });
 
 /* Focus onto input form */
 document.getElementById('inputRegex').focus();
-window.setTimeout( 
-  function(){document.getElementById('inputRegex').select();}, 0);
+window.setTimeout(
+  function () { document.getElementById('inputRegex').select(); }, 0);
 //Thanks to http://stackoverflow.com/questions/480735#comment40578284_14573552
 
 var makeVisible = document.getElementById('history').style.display == 'none';
 setHistoryVisibility(makeVisible);
-chrome.storage.local.set({isSearchHistoryVisible: makeVisible});
+chrome.storage.local.set({ isSearchHistoryVisible: makeVisible });
 
 setCaseInsensitiveElement();
+
+async function testForTabs() {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tabs[0]?.id) {
+      throw new Error('No active tab found');
+    }
+  } catch (error) {
+    showError(error)
+  }
+}
+
+testForTabs();
 /*** INIT ***/
 
